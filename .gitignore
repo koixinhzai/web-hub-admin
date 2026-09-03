@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+*.zip
+
+# Ảnh admin upload — giữ thư mục, không commit nội dung (319 file, ~52MB hiện tại)
+uploads/*
+!uploads/.gitkeep
+
+.DS_Store

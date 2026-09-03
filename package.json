@@ -1,0 +1,22 @@
+{
+  "name": "web-hub-server",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "db:apply-schema": "node migrate/apply-schema.js",
+    "db:create-admin": "node migrate/create-admin.js",
+    "db:seed-mock": "node migrate/seed-mock-data.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.0",
+    "mysql2": "^3.11.0"
+  }
+}
