@@ -4,6 +4,7 @@ import { useRoute, useRouter, RouterLink } from 'vue-router';
 import {
   fetchBusiness, createBusiness, updateBusiness,
   uploadBusinessImages, deleteBusinessImage, setPrimaryBusinessImage,
+  uploadBusinessVideos, deleteBusinessVideo,
 } from '../api/businesses';
 import { fetchSites } from '../api/sites';
 import { fetchCategories } from '../api/categories';
@@ -41,6 +42,7 @@ const sites = ref([]);
 const categories = ref([]);
 const badges = ref([]);
 const images = ref([]); // [{id, url, isPrimary}] — only populated in edit mode
+const videos = ref([]); // [{id, url}] — only populated in edit mode
 
 // Shared fields (name, hero image via `images` above, and every other basic
 // column) are entered once here and apply to every site the service is on.
@@ -227,6 +229,7 @@ async function loadBusiness() {
   }
   activeSiteTab.value = form.siteIds.length ? form.siteIds[0] : null;
   images.value = b.images;
+  videos.value = b.videos || [];
 }
 
 onMounted(async () => {
@@ -370,6 +373,29 @@ async function onSetPrimary(imageId) {
     alert(err.message);
   }
 }
+
+async function onUploadVideo(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  try {
+    const uploaded = await uploadBusinessVideos(businessId.value, files);
+    videos.value.push(...uploaded);
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    e.target.value = '';
+  }
+}
+
+async function onDeleteVideo(videoId) {
+  if (!confirm('Xóa video này?')) return;
+  try {
+    await deleteBusinessVideo(businessId.value, videoId);
+    videos.value = videos.value.filter((v) => v.id !== videoId);
+  } catch (err) {
+    alert(err.message);
+  }
+}
 </script>
 
 <template>
@@ -486,6 +512,19 @@ async function onSetPrimary(imageId) {
           </div>
         </div>
         <input type="file" accept="image/*" multiple @change="onUploadImage" />
+      </fieldset>
+
+      <fieldset class="admin-fieldset">
+        <legend>Video</legend>
+        <div class="admin-video-grid">
+          <div v-for="vid in videos" :key="vid.id" class="admin-video-item">
+            <video :src="vid.url" controls preload="metadata"></video>
+            <div class="admin-image-item-actions">
+              <button type="button" class="admin-link-danger" @click="onDeleteVideo(vid.id)">Xóa</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" multiple @change="onUploadVideo" />
       </fieldset>
 
       <fieldset class="admin-fieldset">

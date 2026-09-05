@@ -7,6 +7,7 @@
     "dev": "node --watch index.js",
     "start": "node index.js",
     "db:apply-schema": "node migrate/apply-schema.js",
+    "db:add-business-videos": "node migrate/add-business-videos.js",
     "db:create-admin": "node migrate/create-admin.js",
     "db:seed-mock": "node migrate/seed-mock-data.js"
   },

@@ -26,3 +26,10 @@ export function uploadBusinessImages(id, files) {
 }
 export const deleteBusinessImage = (id, imageId) => http.del(`/api/businesses/${id}/images/${imageId}`);
 export const setPrimaryBusinessImage = (id, imageId) => http.patch(`/api/businesses/${id}/images/${imageId}/primary`);
+
+export function uploadBusinessVideos(id, files) {
+  const form = new FormData();
+  for (const file of files) form.append('videos', file);
+  return http.post(`/api/businesses/${id}/videos`, form);
+}
+export const deleteBusinessVideo = (id, videoId) => http.del(`/api/businesses/${id}/videos/${videoId}`);

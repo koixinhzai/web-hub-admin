@@ -124,6 +124,9 @@ body { margin: 0; }
 .admin-image-item img { width: 110px; height: 82px; object-fit: cover; border-radius: 8px; margin-bottom: 4px; }
 .admin-image-item.is-primary img { outline: 3px solid #2f9e6e; }
 .admin-image-item-actions { display: flex; flex-direction: column; gap: 2px; }
+.admin-video-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.admin-video-item { width: 200px; text-align: center; }
+.admin-video-item video { width: 200px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 4px; background: #000; }
 .admin-form-actions { position: sticky; bottom: 0; background: #f4f5f7; padding-top: 8px; }
 
 .admin-site-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }

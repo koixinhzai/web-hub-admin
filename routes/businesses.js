@@ -3,7 +3,7 @@ import { pool } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { slugify, uniqueSlug } from '../utils/slugify.js';
-import { uploadImage, deleteUploadedFile } from '../middleware/upload.js';
+import { uploadImage, uploadVideo, deleteUploadedFile } from '../middleware/upload.js';
 
 const router = Router();
 
@@ -49,6 +49,7 @@ async function loadChildrenForIds(ids, siteId) {
     categories: new Map(),
     badges: new Map(),
     images: new Map(),
+    videos: new Map(),
   };
   if (!ids.length) return empty;
   const placeholders = ids.map(() => '?').join(',');
@@ -83,6 +84,12 @@ async function loadChildrenForIds(ids, siteId) {
      ORDER BY is_primary DESC, sort_order, id`,
     ids
   );
+  const [videoRows] = await pool.query(
+    `SELECT id, business_id, url, sort_order
+     FROM business_videos WHERE business_id IN (${placeholders})
+     ORDER BY sort_order, id`,
+    ids
+  );
 
   const group = (rows, mapFn) => {
     const map = new Map();
@@ -103,6 +110,11 @@ async function loadChildrenForIds(ids, siteId) {
       url: r.url,
       sortOrder: r.sort_order,
       isPrimary: !!r.is_primary,
+    })),
+    videos: group(videoRows, (r) => ({
+      id: r.id,
+      url: r.url,
+      sortOrder: r.sort_order,
     })),
   };
 }
@@ -389,6 +401,7 @@ router.get(
       ...mapBusinessRow(rows[0]),
       sites: siteRows,
       images: children.images.get(id) || [],
+      videos: children.videos.get(id) || [],
       siteData,
       ...flatSite,
     });
@@ -631,8 +644,10 @@ router.delete(
     const id = await resolveBusinessId(req.params.id);
     if (!id) return res.status(404).json({ error: 'Không tìm thấy dịch vụ.' });
     const [images] = await pool.query('SELECT url FROM business_images WHERE business_id = ?', [id]);
+    const [videos] = await pool.query('SELECT url FROM business_videos WHERE business_id = ?', [id]);
     await pool.query('DELETE FROM businesses WHERE id = ?', [id]); // cascades every child table
     images.forEach((img) => deleteUploadedFile(img.url));
+    videos.forEach((v) => deleteUploadedFile(v.url));
     return res.status(204).end();
   })
 );
@@ -720,6 +735,53 @@ router.patch(
     } finally {
       conn.release();
     }
+  })
+);
+
+// ---------------------------------------------------------------------------
+// Videos (multipart upload -- same pattern as images above, no "primary"
+// concept since `businesses` has no hero-video column).
+// ---------------------------------------------------------------------------
+router.post(
+  '/:id/videos',
+  requireAuth,
+  // 'videos' accepts one or many files in the same field, same as 'images'
+  // above — up to 5 per request (video files are much larger than images).
+  uploadVideo.array('videos', 5),
+  asyncHandler(async (req, res) => {
+    const id = await resolveBusinessId(req.params.id);
+    if (!id) return res.status(404).json({ error: 'Không tìm thấy dịch vụ.' });
+    if (!req.files || !req.files.length) return res.status(400).json({ error: 'Chưa tải lên tệp video nào.' });
+
+    const [[{ count }]] = await pool.query(
+      'SELECT COUNT(*) AS count FROM business_videos WHERE business_id = ?',
+      [id]
+    );
+
+    const uploaded = [];
+    let sortOrder = count;
+    for (const file of req.files) {
+      const url = `/uploads/${file.filename}`;
+      const [result] = await pool.query(
+        'INSERT INTO business_videos (business_id, url, sort_order) VALUES (?, ?, ?)',
+        [id, url, sortOrder]
+      );
+      uploaded.push({ id: result.insertId, url });
+      sortOrder += 1;
+    }
+    return res.status(201).json(uploaded);
+  })
+);
+
+router.delete(
+  '/:id/videos/:videoId',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const [rows] = await pool.query('SELECT url FROM business_videos WHERE id = ?', [req.params.videoId]);
+    if (!rows[0]) return res.status(404).json({ error: 'Không tìm thấy video.' });
+    await pool.query('DELETE FROM business_videos WHERE id = ?', [req.params.videoId]);
+    deleteUploadedFile(rows[0].url);
+    return res.status(204).end();
   })
 );
 
