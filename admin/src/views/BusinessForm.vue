@@ -95,6 +95,14 @@ function defaultServices() {
   ].map((name) => ({ name, included: true, price: null, extraPrice: null }));
 }
 
+function defaultRates() {
+  return [
+    { timeLabel: '1 hour', studioPrice: 150, homePrice: 250 },
+    { timeLabel: '1.5 hour', studioPrice: 200, homePrice: 350 },
+    { timeLabel: '2 hour', studioPrice: 250, homePrice: 400 },
+  ];
+}
+
 function emptySiteData() {
   return {
     categoryIds: [],
@@ -103,7 +111,7 @@ function emptySiteData() {
     paragraphs: [''],
     specialties: [''],
     services: defaultServices(),
-    rates: [],
+    rates: defaultRates(),
     reviews: [],
   };
 }
@@ -213,7 +221,7 @@ async function loadBusiness() {
       paragraphs: d.paragraphs && d.paragraphs.length ? [...d.paragraphs] : [''],
       specialties: d.specialties && d.specialties.length ? [...d.specialties] : [''],
       services: d.services && d.services.length ? d.services.map((s) => ({ ...s })) : defaultServices(),
-      rates: (d.rates || []).map((r) => ({ ...r })),
+      rates: d.rates && d.rates.length ? d.rates.map((r) => ({ ...r })) : defaultRates(),
       reviews: (d.reviews || []).map((r) => ({ ...r, reply: r.reply || '' })),
     };
   }
