@@ -209,10 +209,10 @@ async function loadBusiness() {
     form.siteData[siteId] = {
       categoryIds: d.categoryIds || [],
       badgeIds: d.badgeIds || [],
-      info: (d.info || []).map((r) => ({ ...r })),
+      info: d.info && d.info.length ? d.info.map((r) => ({ ...r })) : defaultInfo(),
       paragraphs: d.paragraphs && d.paragraphs.length ? [...d.paragraphs] : [''],
       specialties: d.specialties && d.specialties.length ? [...d.specialties] : [''],
-      services: (d.services || []).map((s) => ({ ...s })),
+      services: d.services && d.services.length ? d.services.map((s) => ({ ...s })) : defaultServices(),
       rates: (d.rates || []).map((r) => ({ ...r })),
       reviews: (d.reviews || []).map((r) => ({ ...r, reply: r.reply || '' })),
     };
